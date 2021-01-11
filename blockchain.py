@@ -90,7 +90,7 @@ class Blockchain():
 
 
 # initialize the blockchain with a genesis block
-blockchain = Blockchain(difficulty=6)
+blockchain = Blockchain()
 
 # add come transactions to be added to a block
 transactions = ['fds','sdasdasd','sdasdasda','asdasdasda','juhytgdrs','htrge4scsx','egr4feads','y6rtegfed']
@@ -101,4 +101,3 @@ blockchain.mine(verbose=True)
 print("\nblockchain:")
 for block in blockchain.chain:
     print(block.index, block.timestamp, block.hash)
-    
