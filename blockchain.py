@@ -16,10 +16,10 @@ class Block():
 
 class Blockchain():
 
-    def __init__(self):
+    def __init__(self, difficulty=3):
         self.chain = []
-        self.unconfirmed_blocks = []
-        self.difficulty = 3 # number of leading zero in hash generated from block with a given nonce value
+        self.unconfirmed_transactions = []
+        self.difficulty = difficulty # number of leading zero in hash generated from block with a given nonce value
         self.create_genesis_block()
 
     def getLastBlock(self):
@@ -40,39 +40,65 @@ class Blockchain():
         # proof must match hash generated from current block, which will include nonce value if proof is valid
         return proof.startswith('0' * self.difficulty) and proof == block.generate_hash()
 
+    def add_transactions(self,transactions):
+        self.unconfirmed_transactions += transactions
+    
+    def clear_transactions(self):
+        self.unconfirmed_transactions = []
+
     def create_genesis_block(self):
         # create the first block
         block = Block(0, [], time.time(), "Chancellor on the brink..")
         block.hash = block.generate_hash()
         self.chain.append(block)
 
-    def proof_of_work(self, block):
+    def proof_of_work(self, block, verbose=False):
         # compute the nonce value by incrementing nonce and hashing block with until valid hash with indicated difficuly is found
         computed_hash = block.generate_hash()
         while not computed_hash.startswith('0' * self.difficulty):
             block.nonce += 1
             computed_hash = block.generate_hash()
+        if(verbose):
+            print("\nnonce with difficulty " + str(self.difficulty) + " found after " + str(block.nonce) + " iterations!")
         return computed_hash
+
+    def mine(self, verbose=False):
+        # create a new block from all unconfirmed transactions
+
+        if(len(self.unconfirmed_transactions) == 0): 
+            if(verbose == True):
+                print("\nNo unconfirmed transactions.")
+            return False
+
+        # create a new block
+        new_block = Block(
+            index=self.getLastBlock().index + 1,
+            transactions=self.unconfirmed_transactions,
+            timestamp=time.time(),
+            last_block_hash=self.getLastBlock().hash)
+
+        # generate a proof of work
+        proof = self.proof_of_work(new_block, verbose)
+
+        # attempt to add the new block (proof may not be valid)
+        if(self.addBlock(new_block, proof) == True):
+            self.clear_transactions()
+            if(verbose == True): 
+                print("\nblock #" + str(new_block.index) + " added successfully!")
+            return True
+        else: return False
 
 
 # initialize the blockchain with a genesis block
-blockchain = Blockchain() 
+blockchain = Blockchain(difficulty=6)
 
-# create a new block
-newBlock = Block(
-    index=blockchain.getLastBlock().index + 1,
-    transactions=['transaction 1', 'transaction 2', 'transaction 3'],
-    timestamp=time.time(),
-    last_block_hash=blockchain.getLastBlock().hash )
+# add come transactions to be added to a block
+transactions = ['fds','sdasdasd','sdasdasda','asdasdasda','juhytgdrs','htrge4scsx','egr4feads','y6rtegfed']
+blockchain.add_transactions(transactions)
 
-# generatet a proof of work
-proof = blockchain.proof_of_work(newBlock)
-
-# attempt to add the new block (proof may not be valid)
-if(blockchain.addBlock(newBlock,proof) == True):
-    print("\nblock #" + str(newBlock.index) + " added successfully!")
+blockchain.mine(verbose=True)
 
 print("\nblockchain:")
 for block in blockchain.chain:
     print(block.index, block.timestamp, block.hash)
-
+    
